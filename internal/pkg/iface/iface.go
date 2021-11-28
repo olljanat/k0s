@@ -34,7 +34,7 @@ func AllAddresses() ([]string, error) {
 	for _, a := range addrs {
 		// check the address type and skip if loopback
 		if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-			if ipnet.IP.To4() != nil {
+			if ipnet.IP.To4() != nil || ipnet.IP.To16() != nil {
 				addresses = append(addresses, ipnet.IP.String())
 			}
 		}
@@ -65,6 +65,14 @@ func FirstPublicAddress() (string, error) {
 			// check the address type and skip if loopback
 			if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
 				if ipnet.IP.To4() != nil && !ipnet.IP.IsLoopback() {
+					return ipnet.IP.String(), nil
+				}
+			}
+		}
+		for _, a := range addresses {
+			// check the address type and skip if loopback
+			if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+				if ipnet.IP.To16() != nil && !ipnet.IP.IsLoopback() {
 					return ipnet.IP.String(), nil
 				}
 			}
