@@ -45,12 +45,14 @@ func AllAddresses() ([]string, error) {
 	return addresses, nil
 }
 
-// FirstPublicAddress return the first found non-local address that's not part of pod network
+// FirstPublicAddress return the first found non-local IPv4 address that's not part of pod network
+// if node does not have any IPv4 address then return the first found non-local IPv6 address
 func FirstPublicAddress() (string, error) {
 	ifs, err := net.Interfaces()
 	if err != nil {
 		return "127.0.0.1", fmt.Errorf("failed to list network interfaces: %w", err)
 	}
+	ipv6addr := ""
 	for _, i := range ifs {
 		if i.Name == "vxlan.calico" {
 			// Skip calico interface
@@ -64,19 +66,17 @@ func FirstPublicAddress() (string, error) {
 		for _, a := range addresses {
 			// check the address type and skip if loopback
 			if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-				if ipnet.IP.To4() != nil && !ipnet.IP.IsLoopback() {
-					return ipnet.IP.String(), nil
+				if ipnet.IP.To4() != nil && s := ipnet.IP.String(); s != "<nil>" {
+					return s, nil
+				}
+				if ipnet.IP.To16() != nil && s := ipnet.IP.String(); s != "<nil>" {
+					ipv6addr = s
 				}
 			}
 		}
-		for _, a := range addresses {
-			// check the address type and skip if loopback
-			if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-				if ipnet.IP.To16() != nil && !ipnet.IP.IsLoopback() {
-					return ipnet.IP.String(), nil
-				}
-			}
-		}
+	}
+	if ipv6addr != "" {
+		return ipv6addr, nil
 	}
 
 	logrus.Warn("failed to find any non-local, non podnetwork addresses on host, defaulting public address to 127.0.0.1")
