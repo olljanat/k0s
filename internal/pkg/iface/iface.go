@@ -70,7 +70,7 @@ func FirstPublicAddress() (string, error) {
 					return ipnet.IP.String(), nil
 				}
 				if ipnet.IP.To16() != nil && ipv6addr == "" {
-					ipv6addr = s
+					ipv6addr = ipnet.IP.String()
 				}
 			}
 		}
