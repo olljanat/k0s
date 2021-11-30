@@ -66,10 +66,10 @@ func FirstPublicAddress() (string, error) {
 		for _, a := range addresses {
 			// check the address type and skip if loopback
 			if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-				if ipnet.IP.To4() != nil && s := ipnet.IP.String(); s != "<nil>" {
-					return s, nil
+				if ipnet.IP.To4() != nil {
+					return ipnet.IP.String(), nil
 				}
-				if ipnet.IP.To16() != nil && s := ipnet.IP.String(); s != "<nil>" {
+				if ipnet.IP.To16() != nil && ipv6addr == "" {
 					ipv6addr = s
 				}
 			}
